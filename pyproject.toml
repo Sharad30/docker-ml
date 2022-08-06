@@ -10,6 +10,9 @@ pandas = "^1.4.3"
 xgboost = "^1.6.1"
 pydantic = "^1.9.1"
 scikit-learn = "^1.1.2"
+matplotlib = "^3.5.2"
+loguru = "^0.6.0"
+wandb = "^0.13.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^5.0.3"
