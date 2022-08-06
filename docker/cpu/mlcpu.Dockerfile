@@ -1,4 +1,5 @@
 FROM python:3.9.6-slim-buster
+# default location for all subsequent commands
 WORKDIR /
 RUN apt update && apt install -y --no-install-recommends \
     git \
@@ -34,3 +35,10 @@ RUN pip3 install \
     missingno \
     optuna 
 RUN jupyter nbextension enable --py widgetsnbextension
+
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
+# RUN pip3 freeze > requirements.txt
+
+# COPY the code OR Receive data location from local data service
+# Receive data location from local data service

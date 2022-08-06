@@ -5,7 +5,7 @@ services:
     init: true
     build:
       context: ./
-      dockerfile: mlcpu.Dockerfile
+      dockerfile: cpu/mlcpu.Dockerfile
     env_file: ./.env
     ports:
       - ${JUPYTER_PORT_ML}:${JUPYTER_PORT_ML}
@@ -28,7 +28,7 @@ services:
     init: true
     build:
       context: ./
-      dockerfile: mlcpu.Dockerfile
+      dockerfile: cpu/mlcpu.Dockerfile
     env_file: ./.env
     ports:
       - ${JUPYTER_PORT_ML}:${JUPYTER_PORT_ML}
@@ -38,5 +38,6 @@ services:
     ipc: "host"
     command:
       [
-        "python train.py",
+        "python",
+        "train.py",
       ]
