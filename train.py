@@ -28,7 +28,6 @@ training_config = {
 
 # XGBClassifier
 xgb_config = {
-    "tree_method": "gpu_hist",
     "learning_rate": 0.01,
     "n_estimators": 2000,
     "colsample_bytree": 0.3,
@@ -36,7 +35,6 @@ xgb_config = {
     "reg_alpha": 19,
     "reg_lambda": 19,
     "max_depth": 5,
-    "predictor": "gpu_predictor",
 }
 
 m = TabularModel(
