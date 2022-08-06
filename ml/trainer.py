@@ -2,11 +2,13 @@ import time
 
 import numpy as np
 from pydantic import BaseModel
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import StratifiedKFold
+from loguru import logger
+import wandb
+from sklearn.model_selection import train_test_split
 
 from .tabular_model import TabularModel
 from .tabular_dataset import TabularDataset
+from .utils import log_model_artifacts, save_best_model
 
 
 class Trainer(BaseModel):
@@ -18,46 +20,38 @@ class Trainer(BaseModel):
 
     def train(
         self,
-        n_splits: int = 5,
-        seed: int = 42,
-        oof_filename: str = None,
+        output_filepath: str = "output",
+        model_name: str = "model",
+        is_model: str = "xgb",
+        description: str = "",
     ):
-        skf = StratifiedKFold(
-            n_splits=n_splits,
-            shuffle=True,
-            random_state=seed,
+        wandb.init(project="docker-ml", entity="sharad30", name=model_name)
+        logger.debug("Commencing train ...")
+        logger.debug(f"Training features: {self.dataset.features}")
+        start = time.time()
+        X_train, X_test, y_train, y_test = train_test_split(
+            self.dataset.train[self.dataset.features], self.dataset.target, test_size=0.33, random_state=42
         )
-
-        for fold, (trn_idx, val_idx) in enumerate(
-            skf.split(
-                X=self.dataset.train,
-                y=self.dataset.target,
-            )
-        ):
-            print(f"===== Fold {fold} =====")
-            X_train = self.dataset.train[self.dataset.features].iloc[trn_idx]
-            y_train = self.dataset.target.iloc[trn_idx]
-            X_valid = self.dataset.train[self.dataset.features].iloc[val_idx]
-            y_valid = self.dataset.target.iloc[val_idx]
-            X_test = self.dataset.test[self.dataset.features]
-
-            start = time.time()
-
-            self.model.model.fit(
-                X_train,
-                y_train,
-                eval_set=[(X_valid, y_valid)],
-                **self.model.training_config,
-            )
-
-            self.model.oof[val_idx] = self.model.model.predict_proba(X_valid)[:, -1]
-            self.model.preds += self.model.model.predict_proba(X_test)[:, -1] / n_splits
-
-            elapsed = time.time() - start
-            auc = roc_auc_score(y_valid, self.model.oof[val_idx])
-            print(f"Fold {fold} - AUC: {auc:.6f}, Elapsed Time: {elapsed:.2f}sec\n")
-
-        print(f"OOF roc = {roc_auc_score(self.dataset.target, self.model.oof)}")
-
-        if oof_filename:
-            np.save(oof_filename, self.model.oof)
+        best_model = save_best_model(
+            is_model,
+            self.model,
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+            output_filepath,
+            model_name,
+        )
+        log_model_artifacts(
+            wandb,
+            best_model.model,
+            X_train,
+            X_test,
+            y_test,
+            model_name,
+            description,
+            output_filepath,
+        )
+        wandb.finish()
+        elapsed = time.time() - start
+        print(f"Elapsed Time: {elapsed:.2f}sec\n")
