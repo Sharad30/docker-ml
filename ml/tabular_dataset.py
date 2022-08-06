@@ -31,6 +31,7 @@ class TabularDataset(BaseModel):
         self.test[self.features] = self.test[self.features].fillna(self.test[self.features].mean())
 
         le = LabelEncoder()
-        self.train[self.features] = le.fit_transform(self.train[self.features])
-        self.test[self.features] = le.transform(self.test[self.features])
+        cat_features = ["Sex", "Embarked"]
+        self.train[cat_features] = le.fit_transform(cat_features)
+        self.test[cat_features] = le.transform(cat_features)
         return self
